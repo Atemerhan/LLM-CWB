@@ -1,0 +1,39 @@
+name: GLM U1 Full Run
+
+# Runs the FULL U1 self-consistency experiment for GLM (100 per difficulty,
+# k=10 => 300 samples x 10 = 3000 GLM calls), using the identical frozen subset
+# seed, k, temperature, and decision rule as the DeepSeek U1 run. `--agent glm`
+# auto-reads results/glm.json (GLM's own committed temp-0 baseline) and writes
+# results/glm_u1.json. Requires the GLM Exp 0 artifact (results/glm.json) to be
+# committed first. Manual dispatch only; touches no frozen benchmark code.
+on:
+  workflow_dispatch:
+
+jobs:
+  full:
+    runs-on: ubuntu-latest
+    timeout-minutes: 350
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Run GLM U1 full self-consistency (300 x k=10)
+        env:
+          GLM_API_KEY: ${{ secrets.GLM_API_KEY }}
+        run: |
+          # Pinned to the same fast tier as glm-benchmark.yml (overrides any
+          # GLM_MODEL secret) so Exp 0 and U1 query the identical model.
+          export GLM_MODEL="glm-4-flash"
+          if [ -n "${{ secrets.GLM_BASE_URL }}" ]; then
+            export GLM_BASE_URL="${{ secrets.GLM_BASE_URL }}"
+          fi
+          python u1_selfconsistency.py --agent glm
+
+      - name: Upload results artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: glm-u1-results
+          path: results/glm_u1.json

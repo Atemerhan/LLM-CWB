@@ -1,0 +1,32 @@
+{
+  "experiment": "embodied_airsim_a1",
+  "episodes": 20,
+  "backend": "airsim_physx_blocks_v1.8.1",
+  "airsim_settings": {
+    "SimMode": "Multirotor",
+    "z0": -3.0,
+    "cell_size": 1.0,
+    "speed": 1.0
+  },
+  "note": "AirSim Blocks (Unreal+PhysX) smoke test. 20 episodes, A1 arm with oracle (A*) policy. collision_rate expected 0 by construction (safe-by-construction architecture).",
+  "arms": [
+    {
+      "episodes": 20,
+      "success_rate": 1.0,
+      "spl": 1.0,
+      "collision_rate": 0.0,
+      "veto_rate": 0.0,
+      "mean_steps": 1.7,
+      "mean_optimal_len": 1.7,
+      "terminations": {
+        "goal": 20,
+        "collision": 0,
+        "step_cap": 0,
+        "stuck": 0
+      },
+      "arm": "a1",
+      "authority": "a1_select_from_safe",
+      "policy": "oracle"
+    }
+  ]
+}

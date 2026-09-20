@@ -1,0 +1,92 @@
+{
+  "experiment": "embodied_archA_closed_loop",
+  "episodes": 1200,
+  "note": "Reference policies only; real LLM arm pending API wiring (CachedPolicy). Frozen dataset reused as episodes; v0 baseline untouched.",
+  "arms": [
+    {
+      "episodes": 1200,
+      "success_rate": 1.0,
+      "spl": 1.0,
+      "collision_rate": 0.0,
+      "veto_rate": 0.0,
+      "mean_steps": 6.0841666666666665,
+      "mean_optimal_len": 6.0841666666666665,
+      "terminations": {
+        "goal": 1200,
+        "collision": 0,
+        "step_cap": 0,
+        "stuck": 0
+      },
+      "authority": "planner_only",
+      "policy": "oracle"
+    },
+    {
+      "episodes": 1200,
+      "success_rate": 0.41,
+      "spl": 0.41,
+      "collision_rate": 0.59,
+      "veto_rate": 0.0,
+      "mean_steps": 2.7058333333333335,
+      "mean_optimal_len": 6.0841666666666665,
+      "terminations": {
+        "goal": 492,
+        "collision": 708,
+        "step_cap": 0,
+        "stuck": 0
+      },
+      "authority": "ungated",
+      "policy": "greedy"
+    },
+    {
+      "episodes": 1200,
+      "success_rate": 0.6508333333333334,
+      "spl": 0.6504814814814814,
+      "collision_rate": 0.0,
+      "veto_rate": 0.4458807193864057,
+      "mean_steps": 25.206666666666667,
+      "mean_optimal_len": 6.0841666666666665,
+      "terminations": {
+        "goal": 781,
+        "collision": 0,
+        "step_cap": 419,
+        "stuck": 0
+      },
+      "authority": "a1",
+      "policy": "greedy"
+    },
+    {
+      "episodes": 1200,
+      "success_rate": 0.056666666666666664,
+      "spl": 0.04438293650793651,
+      "collision_rate": 0.9433333333333334,
+      "veto_rate": 0.0,
+      "mean_steps": 3.5941666666666667,
+      "mean_optimal_len": 6.0841666666666665,
+      "terminations": {
+        "goal": 68,
+        "collision": 1132,
+        "step_cap": 0,
+        "stuck": 0
+      },
+      "authority": "ungated",
+      "policy": "random"
+    },
+    {
+      "episodes": 1200,
+      "success_rate": 0.7941666666666667,
+      "spl": 0.3341392061515344,
+      "collision_rate": 0.0,
+      "veto_rate": 0.23634485196161062,
+      "mean_steps": 30.650833333333335,
+      "mean_optimal_len": 6.0841666666666665,
+      "terminations": {
+        "goal": 953,
+        "collision": 0,
+        "step_cap": 247,
+        "stuck": 0
+      },
+      "authority": "a1",
+      "policy": "random"
+    }
+  ]
+}

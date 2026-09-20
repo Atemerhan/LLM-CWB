@@ -1,0 +1,9 @@
+# Core benchmark and closed-loop runner use the standard library only.
+# matplotlib is the single dependency needed to render figures.
+matplotlib>=3.7
+
+# Optional extras - all lazily imported, install only the ones you need:
+#   airsim         AirSim/PhysX fidelity level (Windows + Unreal Blocks 1.8.1)
+#   torch          local small-model probes (u2_probe.py)
+#   transformers   local small-model probes (u2_probe.py)
+#   scikit-learn   AUROC / risk-coverage analysis

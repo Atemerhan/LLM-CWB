@@ -1,0 +1,48 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.venv/
+venv/
+
+# Evaluation run outputs (keep the greedy reference run committed).
+results/*.json
+!results/greedy_baseline.json
+
+# Committed benchmark run output.
+!results/deepseek.json
+
+# Committed U1 self-consistency result.
+!results/deepseek_u1.json
+
+# Committed GLM Exp0 result (glm-4-flash).
+!results/glm.json
+
+# Committed GLM U1 result (glm-4-flash).
+!results/glm_u1.json
+
+# Committed Kimi Exp0 result (moonshot-v1-8k).
+!results/kimi.json
+
+# Committed Kimi U1 result (moonshot-v1-8k).
+!results/kimi_u1.json
+
+# Committed 档A closed-loop reference results (additive; not a frozen baseline).
+!results/embodied_baseline.json
+
+# Committed 档B AirSim (PhysX) smoke result (additive; not a frozen baseline).
+!results/embodied_airsim_a1.json
+
+# Committed 档B AirSim (PhysX) three-arm comparison (additive; not a frozen baseline).
+!results/embodied_airsim_arms.json
+
+# Committed closed-loop real-LLM arm results (additive; not a frozen baseline).
+!results/embodied_llm_deepseek.json
+!results/embodied_llm_glm.json
+!results/embodied_llm_kimi.json
+!results/embodied_llm_glm_glm-5.1_.json
+
+# Committed U2 internal-probe results (additive; not a frozen baseline).
+!results/qwen2_5_3b_u2.json
+!results/phi3_5_mini_u2.json

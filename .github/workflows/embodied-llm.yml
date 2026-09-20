@@ -1,0 +1,79 @@
+name: Embodied LLM Arm (closed-loop)
+
+# Runs the 档 A closed-loop simulation with a REAL LLM as the high-level (L3)
+# policy through the L2 arbiter / L1 monitor (run_embodied_llm.py), producing
+# trajectory-level success / SPL / collision / veto metrics per authority arm.
+# Decisions are live (closed-loop visits states absent from the frozen dataset,
+# so they cannot be replayed). Manual dispatch only; touches no frozen code and
+# writes only results/embodied_llm_<agent>.json.
+on:
+  workflow_dispatch:
+    inputs:
+      agent:
+        description: "Model to drive the L3 policy"
+        type: choice
+        options: [deepseek, glm, kimi]
+        default: deepseek
+      limit:
+        description: "Number of frozen episodes to roll out"
+        type: string
+        default: "100"
+      arms:
+        description: "Authority arms (comma-separated: planner,a1,ungated)"
+        type: string
+        default: "a1,planner,ungated"
+      model_id:
+        description: "Override model id (blank = baseline-matched pin)"
+        type: string
+        default: ""
+
+jobs:
+  embodied:
+    runs-on: ubuntu-latest
+    timeout-minutes: 180
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Run closed-loop LLM arm
+        env:
+          DEEPSEEK_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }}
+          GLM_API_KEY: ${{ secrets.GLM_API_KEY }}
+          KIMI_API_KEY: ${{ secrets.KIMI_API_KEY }}
+          GLM_BASE_URL_SECRET: ${{ secrets.GLM_BASE_URL }}
+          KIMI_BASE_URL_SECRET: ${{ secrets.KIMI_BASE_URL }}
+        run: |
+          # Only export a base-url override when the secret is non-empty (an empty
+          # secret would blank the provider default host and break every call).
+          if [ -n "$GLM_BASE_URL_SECRET" ]; then export GLM_BASE_URL="$GLM_BASE_URL_SECRET"; fi
+          if [ -n "$KIMI_BASE_URL_SECRET" ]; then export KIMI_BASE_URL="$KIMI_BASE_URL_SECRET"; fi
+          # Model id: blank input => baseline-matched pin (same model characterized
+          # single-step in Exp 0 / U1); non-blank => the requested upgrade id.
+          OV="${{ inputs.model_id }}"
+          case "${{ inputs.agent }}" in
+            deepseek) export DEEPSEEK_MODEL="${OV:-deepseek-chat}" ;;
+            glm)      export GLM_MODEL="${OV:-glm-4-flash}" ;;
+            kimi)     export KIMI_MODEL="${OV:-moonshot-v1-8k}" ;;
+          esac
+          # Distinct output path when a non-baseline model is used.
+          if [ -n "$OV" ]; then
+            SAFE=$(echo "$OV" | tr -c 'A-Za-z0-9._-' '_')
+            OUT="results/embodied_llm_${{ inputs.agent }}_${SAFE}.json"
+          else
+            OUT="results/embodied_llm_${{ inputs.agent }}.json"
+          fi
+          echo "OUT=$OUT" >> "$GITHUB_ENV"
+          python run_embodied_llm.py \
+            --agent "${{ inputs.agent }}" \
+            --limit "${{ inputs.limit }}" \
+            --arms "${{ inputs.arms }}" \
+            --output "$OUT"
+
+      - name: Upload results artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: embodied-llm-${{ inputs.agent }}
+          path: ${{ env.OUT }}
+

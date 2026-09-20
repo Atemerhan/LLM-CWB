@@ -1,0 +1,31 @@
+name: Model Availability Probe
+
+# Stage D: cheaply probe whether candidate upgrade models exist on the
+# accounts. Runs 2 samples each through the frozen pipeline; writes nothing to
+# the repo (outputs go to /tmp). Read the report block + any "[warn] ... failed
+# permanently" lines to judge availability. Manual dispatch only.
+on:
+  workflow_dispatch:
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Probe GLM candidate (glm-5.2)
+        env:
+          GLM_API_KEY: ${{ secrets.GLM_API_KEY }}
+        run: |
+          echo "=== PROBE glm-5.2 ==="
+          GLM_MODEL=glm-5.2 python evaluate.py --agent glm --limit 2 --output /tmp/p_glm52.json || true
+
+      - name: Probe Kimi candidate (kimi-k2.7)
+        env:
+          KIMI_API_KEY: ${{ secrets.KIMI_API_KEY }}
+        run: |
+          echo "=== PROBE kimi-k2.7 ==="
+          KIMI_MODEL=kimi-k2.7 KIMI_MIN_INTERVAL=3.5 python evaluate.py --agent kimi --limit 2 --output /tmp/p_kimi27.json || true

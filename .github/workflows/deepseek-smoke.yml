@@ -1,0 +1,29 @@
+name: DeepSeek Smoke Test
+
+on:
+  workflow_dispatch:
+
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Run DeepSeek smoke test (5 samples)
+        env:
+          DEEPSEEK_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }}
+        run: |
+          if [ -n "${{ secrets.DEEPSEEK_MODEL }}" ]; then
+            export DEEPSEEK_MODEL="${{ secrets.DEEPSEEK_MODEL }}"
+          fi
+          python evaluate.py --agent deepseek --limit 5 --output results/deepseek_smoke.json
+
+      - name: Upload smoke results
+        uses: actions/upload-artifact@v4
+        with:
+          name: deepseek-smoke-results
+          path: results/deepseek_smoke.json

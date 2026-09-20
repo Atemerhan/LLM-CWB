@@ -1,0 +1,12 @@
+{
+  "experiment": "embodied_archA_llm_closed_loop",
+  "model": "deepseek-chat", "provider": "deepseek", "agent": "deepseek",
+  "episodes": 100, "prompt_version": "v0", "temperature": 0.0,
+  "llm_calls": 262, "malformed_decisions": 0,
+  "note": "Reconstructed from GitHub Actions run 27818597172 log (per-arm headline metrics; full mean_steps/terminations in the run artifact).",
+  "arms": [
+    {"arm": "a1", "success_rate": 0.570, "spl": 0.557, "collision_rate": 0.000, "veto_rate": 0.129},
+    {"arm": "planner", "success_rate": 1.000, "spl": 1.000, "collision_rate": 0.000, "veto_rate": 0.000},
+    {"arm": "ungated", "success_rate": 0.370, "spl": 0.362, "collision_rate": 0.310, "veto_rate": 0.000}
+  ]
+}

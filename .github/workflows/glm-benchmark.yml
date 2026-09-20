@@ -1,0 +1,37 @@
+name: GLM Benchmark
+
+# Mirrors deepseek-benchmark.yml exactly, with the model swapped to GLM. Runs
+# the full 1200-sample dataset through the identical prompt v0 / scoring /
+# reporting path (Exp 0). Manual dispatch only — do not run until the smoke
+# gate passes and the GLM model id is locked.
+on:
+  workflow_dispatch:
+
+jobs:
+  benchmark:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Run GLM benchmark
+        env:
+          GLM_API_KEY: ${{ secrets.GLM_API_KEY }}
+        run: |
+          # Model pinned in-workflow (fast, stable production chat tier) for
+          # reproducibility and to keep throughput under the CI ceiling; this
+          # intentionally overrides any GLM_MODEL secret.
+          export GLM_MODEL="glm-4-flash"
+          if [ -n "${{ secrets.GLM_BASE_URL }}" ]; then
+            export GLM_BASE_URL="${{ secrets.GLM_BASE_URL }}"
+          fi
+          python evaluate.py --agent glm --output results/glm.json
+
+      - name: Upload results
+        uses: actions/upload-artifact@v4
+        with:
+          name: glm-results
+          path: results/glm.json

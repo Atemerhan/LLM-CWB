@@ -1,0 +1,12 @@
+{
+  "experiment": "embodied_archA_llm_closed_loop",
+  "model": "moonshot-v1-8k", "provider": "kimi", "agent": "kimi",
+  "episodes": 100, "prompt_version": "v0", "temperature": 0.0,
+  "llm_calls": 370, "malformed_decisions": 0,
+  "note": "Reconstructed from GitHub Actions run 27818606119 log.",
+  "arms": [
+    {"arm": "a1", "success_rate": 0.340, "spl": 0.328, "collision_rate": 0.000, "veto_rate": 0.465},
+    {"arm": "planner", "success_rate": 1.000, "spl": 1.000, "collision_rate": 0.000, "veto_rate": 0.000},
+    {"arm": "ungated", "success_rate": 0.050, "spl": 0.050, "collision_rate": 0.930, "veto_rate": 0.000}
+  ]
+}

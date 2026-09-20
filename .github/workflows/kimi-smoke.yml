@@ -1,0 +1,44 @@
+name: Kimi Smoke Test
+
+# Mirrors glm-smoke.yml with the model swapped to Kimi (Moonshot). Runs the
+# first 5 samples through the identical prompt v0 / scoring / reporting path.
+# The push trigger (scoped to the default branch and the relevant files) lets
+# the smoke validate the integration after it lands; also manually
+# dispatchable. This is the Kimi dry-run gate before any full run.
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - claude/confidently-wrong-detection-day1-He1vl
+    paths:
+      - .github/workflows/kimi-smoke.yml
+      - agents.py
+      - evaluate.py
+
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Run Kimi smoke test (5 samples)
+        env:
+          KIMI_API_KEY: ${{ secrets.KIMI_API_KEY }}
+        run: |
+          if [ -n "${{ secrets.KIMI_MODEL }}" ]; then
+            export KIMI_MODEL="${{ secrets.KIMI_MODEL }}"
+          fi
+          if [ -n "${{ secrets.KIMI_BASE_URL }}" ]; then
+            export KIMI_BASE_URL="${{ secrets.KIMI_BASE_URL }}"
+          fi
+          python evaluate.py --agent kimi --limit 5 --output results/kimi_smoke.json
+
+      - name: Upload smoke results
+        uses: actions/upload-artifact@v4
+        with:
+          name: kimi-smoke-results
+          path: results/kimi_smoke.json

@@ -1,0 +1,31 @@
+name: U1 Full Run
+
+# Runs the FULL U1 self-consistency experiment (default params: 100 per
+# difficulty, k=10 => 300 samples x 10 = 3000 DeepSeek calls). Manual only:
+# workflow_dispatch, no push trigger and no inputs, so it cannot be auto-started
+# or repurposed. Separate file; touches no benchmark workflow or frozen code.
+on:
+  workflow_dispatch:
+
+jobs:
+  full:
+    runs-on: ubuntu-latest
+    timeout-minutes: 180
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Run U1 full self-consistency (300 x k=10)
+        env:
+          DEEPSEEK_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }}
+          DEEPSEEK_MODEL: deepseek-chat   # match committed results/deepseek.json
+        run: python u1_selfconsistency.py
+
+      - name: Upload results artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: u1-results
+          path: results/deepseek_u1.json

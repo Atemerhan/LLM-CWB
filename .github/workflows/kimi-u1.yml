@@ -1,0 +1,39 @@
+name: Kimi U1 Full Run
+
+# Runs the FULL U1 self-consistency experiment for Kimi (100 per difficulty,
+# k=10 => 300 samples x 10 = 3000 Kimi calls), using the identical frozen
+# subset seed, k, temperature, and decision rule as the DeepSeek/GLM U1 runs.
+# `--agent kimi` auto-reads results/kimi.json (Kimi's own committed temp-0
+# baseline) and writes results/kimi_u1.json. Requires the Kimi Exp 0 artifact
+# (results/kimi.json) committed first. Manual dispatch only.
+on:
+  workflow_dispatch:
+
+jobs:
+  full:
+    runs-on: ubuntu-latest
+    timeout-minutes: 350
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Run Kimi U1 full self-consistency (300 x k=10)
+        env:
+          KIMI_API_KEY: ${{ secrets.KIMI_API_KEY }}
+        run: |
+          if [ -n "${{ secrets.KIMI_MODEL }}" ]; then
+            export KIMI_MODEL="${{ secrets.KIMI_MODEL }}"
+          fi
+          if [ -n "${{ secrets.KIMI_BASE_URL }}" ]; then
+            export KIMI_BASE_URL="${{ secrets.KIMI_BASE_URL }}"
+          fi
+          python u1_selfconsistency.py --agent kimi
+
+      - name: Upload results artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: kimi-u1-results
+          path: results/kimi_u1.json

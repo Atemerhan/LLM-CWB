@@ -1,0 +1,44 @@
+name: GLM Smoke Test
+
+# Mirrors deepseek-smoke.yml exactly, with the model swapped to GLM. Runs the
+# first 5 samples through the identical prompt v0 / scoring / reporting path.
+# The push trigger (scoped to the default branch and the GLM-relevant files)
+# lets the smoke validate the integration after it lands; it is also manually
+# dispatchable. This is the dry-run gate before any full GLM run.
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - claude/confidently-wrong-detection-day1-He1vl
+    paths:
+      - .github/workflows/glm-smoke.yml
+      - agents.py
+      - evaluate.py
+
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Run GLM smoke test (5 samples)
+        env:
+          GLM_API_KEY: ${{ secrets.GLM_API_KEY }}
+        run: |
+          # Pinned to the same fast tier as the full GLM runs (overrides any
+          # GLM_MODEL secret) so the smoke validates the model we actually use.
+          export GLM_MODEL="glm-4-flash"
+          if [ -n "${{ secrets.GLM_BASE_URL }}" ]; then
+            export GLM_BASE_URL="${{ secrets.GLM_BASE_URL }}"
+          fi
+          python evaluate.py --agent glm --limit 5 --output results/glm_smoke.json
+
+      - name: Upload smoke results
+        uses: actions/upload-artifact@v4
+        with:
+          name: glm-smoke-results
+          path: results/glm_smoke.json

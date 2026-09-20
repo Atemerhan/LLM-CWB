@@ -1,0 +1,56 @@
+{
+  "experiment": "embodied_airsim_arms",
+  "episodes": 8,
+  "backend": "airsim_physx_blocks_v1.8.1",
+  "note": "AirSim Blocks (Unreal+PhysX) three-authority comparison. Waypoint moves executed as real quadrotor flights; collision adjudicated by the same L1 grid oracle (sim_world is_safe_command) before the physics step. Shared AirSim client across episodes (per-episode connect()+takeoff conflicts). Episodes reduced to 8 after AirSim RPC instability under heavy ungated-random collisions.",
+  "arms": [
+    {
+      "episodes": 8,
+      "success_rate": 0.875,
+      "spl": 0.875,
+      "collision_rate": 0.125,
+      "veto_rate": 0.0,
+      "mean_steps": 1.375,
+      "mean_optimal_len": 1.5,
+      "terminations": {"goal": 7, "collision": 1, "step_cap": 0, "stuck": 0},
+      "arm": "ungated_greedy",
+      "episodes_completed": 8
+    },
+    {
+      "episodes": 8,
+      "success_rate": 1.0,
+      "spl": 1.0,
+      "collision_rate": 0.0,
+      "veto_rate": 0.08333333333333333,
+      "mean_steps": 1.5,
+      "mean_optimal_len": 1.5,
+      "terminations": {"goal": 8, "collision": 0, "step_cap": 0, "stuck": 0},
+      "arm": "a1_greedy",
+      "episodes_completed": 8
+    },
+    {
+      "episodes": 8,
+      "success_rate": 0.125,
+      "spl": 0.125,
+      "collision_rate": 0.875,
+      "veto_rate": 0.0,
+      "mean_steps": 2.125,
+      "mean_optimal_len": 1.5,
+      "terminations": {"goal": 1, "collision": 7, "step_cap": 0, "stuck": 0},
+      "arm": "ungated_random",
+      "episodes_completed": 8
+    },
+    {
+      "episodes": 8,
+      "success_rate": 1.0,
+      "spl": 0.5441666666666667,
+      "collision_rate": 0.0,
+      "veto_rate": 0.2857142857142857,
+      "mean_steps": 7.0,
+      "mean_optimal_len": 1.5,
+      "terminations": {"goal": 8, "collision": 0, "step_cap": 0, "stuck": 0},
+      "arm": "a1_random",
+      "episodes_completed": 8
+    }
+  ]
+}

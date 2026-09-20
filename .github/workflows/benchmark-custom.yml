@@ -1,0 +1,61 @@
+name: Custom Single-Step Benchmark
+
+# Single-step Exp 0 on a chosen model id over a stratified subset (N per
+# difficulty). Used to characterize upgrade models (e.g. glm-5.1) on the frozen
+# benchmark: accuracy (incl. by-difficulty), ECE, confidently-wrong, unsafe rate.
+# The summary is printed by evaluate.py to the log; the result JSON is uploaded
+# as an artifact (nothing committed; frozen baselines untouched). Manual only.
+on:
+  workflow_dispatch:
+    inputs:
+      agent:
+        description: "Provider adapter"
+        type: choice
+        options: [deepseek, glm, kimi]
+        default: glm
+      model_id:
+        description: "Exact API model id (e.g. glm-5.1)"
+        type: string
+        default: "glm-5.1"
+      balanced:
+        description: "Samples per difficulty (300 total at 100)"
+        type: string
+        default: "100"
+
+jobs:
+  bench:
+    runs-on: ubuntu-latest
+    timeout-minutes: 300
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Run single-step benchmark
+        env:
+          DEEPSEEK_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }}
+          GLM_API_KEY: ${{ secrets.GLM_API_KEY }}
+          KIMI_API_KEY: ${{ secrets.KIMI_API_KEY }}
+          GLM_BASE_URL_SECRET: ${{ secrets.GLM_BASE_URL }}
+          KIMI_BASE_URL_SECRET: ${{ secrets.KIMI_BASE_URL }}
+        run: |
+          if [ -n "$GLM_BASE_URL_SECRET" ]; then export GLM_BASE_URL="$GLM_BASE_URL_SECRET"; fi
+          if [ -n "$KIMI_BASE_URL_SECRET" ]; then export KIMI_BASE_URL="$KIMI_BASE_URL_SECRET"; fi
+          OV="${{ inputs.model_id }}"
+          case "${{ inputs.agent }}" in
+            deepseek) export DEEPSEEK_MODEL="$OV" ;;
+            glm)      export GLM_MODEL="$OV" KIMI_MIN_INTERVAL=0 ;;
+            kimi)     export KIMI_MODEL="$OV" KIMI_MIN_INTERVAL=3.5 ;;
+          esac
+          SAFE=$(echo "$OV" | tr -c 'A-Za-z0-9._-' '_')
+          python evaluate.py --agent "${{ inputs.agent }}" \
+            --balanced "${{ inputs.balanced }}" \
+            --output "/tmp/bench_${{ inputs.agent }}_${SAFE}.json"
+          echo "BENCH_OUT=/tmp/bench_${{ inputs.agent }}_${SAFE}.json" >> "$GITHUB_ENV"
+
+      - name: Upload result
+        uses: actions/upload-artifact@v4
+        with:
+          name: bench-${{ inputs.agent }}-${{ inputs.model_id }}
+          path: ${{ env.BENCH_OUT }}

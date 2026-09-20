@@ -1,0 +1,59 @@
+name: Upgrade Model Probe
+
+# Cheaply probe which UPGRADE model ids actually exist/respond on the accounts,
+# across all three providers. Runs 2 samples each through the frozen single-step
+# pipeline (evaluate.py), non-aborting, writes nothing to the repo. A final
+# SUMMARY step greps a compact table (model :: malformed_rate / failure) so the
+# tail of the log tells us availability at a glance. Manual dispatch only.
+#
+# NOTE: base-url secrets are exported only when non-empty (an empty secret would
+# blank out the provider default host and break every call).
+on:
+  workflow_dispatch:
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Probe DeepSeek candidates
+        env:
+          DEEPSEEK_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }}
+        run: |
+          for m in deepseek-chat deepseek-reasoner; do
+            echo "===== PROBE :: deepseek :: $m =====" | tee -a /tmp/probe.log
+            DEEPSEEK_MODEL=$m python evaluate.py --agent deepseek --limit 2 --output /tmp/d_$m.json 2>&1 | tee -a /tmp/probe.log || true
+          done
+
+      - name: Probe GLM candidates
+        env:
+          GLM_API_KEY: ${{ secrets.GLM_API_KEY }}
+          GLM_BASE_URL_SECRET: ${{ secrets.GLM_BASE_URL }}
+        run: |
+          if [ -n "$GLM_BASE_URL_SECRET" ]; then export GLM_BASE_URL="$GLM_BASE_URL_SECRET"; fi
+          for m in glm-4-flash glm-4-plus glm-4.5 glm-4.6 glm-5 glm-5.1; do
+            echo "===== PROBE :: glm :: $m =====" | tee -a /tmp/probe.log
+            GLM_MODEL=$m python evaluate.py --agent glm --limit 2 --output /tmp/g_$m.json 2>&1 | tee -a /tmp/probe.log || true
+          done
+
+      - name: Probe Kimi candidates
+        env:
+          KIMI_API_KEY: ${{ secrets.KIMI_API_KEY }}
+          KIMI_BASE_URL_SECRET: ${{ secrets.KIMI_BASE_URL }}
+        run: |
+          if [ -n "$KIMI_BASE_URL_SECRET" ]; then export KIMI_BASE_URL="$KIMI_BASE_URL_SECRET"; fi
+          for m in moonshot-v1-8k kimi-k2 kimi-k2-0905-preview kimi-latest; do
+            echo "===== PROBE :: kimi :: $m =====" | tee -a /tmp/probe.log
+            KIMI_MODEL=$m KIMI_MIN_INTERVAL=3.5 python evaluate.py --agent kimi --limit 2 --output /tmp/k_$m.json 2>&1 | tee -a /tmp/probe.log || true
+          done
+
+      - name: SUMMARY (availability at a glance)
+        run: |
+          echo "================ AVAILABILITY SUMMARY ================"
+          echo "(malformed_rate 0.000 = id works; 1.000 or 'failed permanently' = unavailable/unusable)"
+          grep -E "PROBE ::|malformed_rate|failed permanently:" /tmp/probe.log || true

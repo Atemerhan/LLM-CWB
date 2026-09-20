@@ -1,0 +1,31 @@
+name: U1 Pilot
+
+# Runs ONLY the U1 self-consistency *pilot* (--pilot: 10 per difficulty, k=10,
+# ~300 calls) as a degeneracy gate. It cannot launch the full experiment: the
+# command is hardcoded to `--pilot` and the workflow exposes no inputs.
+# Manual only: workflow_dispatch, no push trigger -> committing this file does
+# NOT execute anything. Separate file; touches no benchmark workflow or frozen code.
+on:
+  workflow_dispatch:
+
+jobs:
+  pilot:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Run U1 self-consistency pilot (10/diff, k=10)
+        env:
+          DEEPSEEK_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }}
+          DEEPSEEK_MODEL: deepseek-chat   # match the committed results/deepseek.json run
+        run: python u1_selfconsistency.py --pilot
+
+      - name: Upload pilot artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: u1-pilot-results
+          path: results/deepseek_u1_pilot.json

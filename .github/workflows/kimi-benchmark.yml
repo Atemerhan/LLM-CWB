@@ -1,0 +1,36 @@
+name: Kimi Benchmark
+
+# Mirrors glm-benchmark.yml with the model swapped to Kimi (Moonshot). Runs the
+# full 1200-sample dataset through the identical prompt v0 / scoring /
+# reporting path (Exp 0). Manual dispatch only — do not run until the smoke
+# gate passes and the Kimi model id is locked.
+on:
+  workflow_dispatch:
+
+jobs:
+  benchmark:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Run Kimi benchmark
+        env:
+          KIMI_API_KEY: ${{ secrets.KIMI_API_KEY }}
+        run: |
+          if [ -n "${{ secrets.KIMI_MODEL }}" ]; then
+            export KIMI_MODEL="${{ secrets.KIMI_MODEL }}"
+          fi
+          if [ -n "${{ secrets.KIMI_BASE_URL }}" ]; then
+            export KIMI_BASE_URL="${{ secrets.KIMI_BASE_URL }}"
+          fi
+          python evaluate.py --agent kimi --output results/kimi.json
+
+      - name: Upload results
+        uses: actions/upload-artifact@v4
+        with:
+          name: kimi-results
+          path: results/kimi.json

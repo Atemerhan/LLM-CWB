@@ -1,0 +1,38 @@
+name: U2 Probe Smoke
+
+# M-C1: parallel matrix smoke for the U2 internal-probe experiment. One
+# concurrent CPU job per open-weight model; each downloads weights, runs a
+# 10-sample forward, extracts per-layer last-token activations, and parses the
+# move via the frozen pipeline. Validates plumbing only (no probe training).
+# Writes results/<slug>_u2_smoke.json (new path; never touches the v0 baseline).
+on:
+  workflow_dispatch:
+
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { model: "Qwen/Qwen2.5-3B-Instruct", slug: "qwen2_5_3b", reasoning: "" }
+          - { model: "microsoft/Phi-3.5-mini-instruct", slug: "phi3_5_mini", reasoning: "" }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install CPU torch + transformers
+        run: |
+          python -m pip install --upgrade pip
+          pip install --index-url https://download.pytorch.org/whl/cpu torch
+          pip install "transformers>=4.45" numpy
+      - name: U2 smoke (10 samples) — ${{ matrix.slug }}
+        run: |
+          python local_model.py --model "${{ matrix.model }}" \
+            --slug "${{ matrix.slug }}" ${{ matrix.reasoning }} --limit 10
+      - name: Upload smoke summary
+        uses: actions/upload-artifact@v4
+        with:
+          name: u2-smoke-${{ matrix.slug }}
+          path: results/${{ matrix.slug }}_u2_smoke.json
