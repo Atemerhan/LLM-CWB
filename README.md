@@ -78,10 +78,28 @@ export DEEPSEEK_API_KEY=...        # or GLM_API_KEY / KIMI_API_KEY
 python evaluate.py --provider deepseek         # benchmark one model -> results/<model>.json
 python run_embodied_llm.py --provider deepseek # closed-loop, ungated vs A1 -> results/embodied_llm_*.json
 python make_fig10.py                           # render the cross-fidelity figure
-python -m unittest discover -p 'test_*.py'     # 12 test modules
+python -m unittest discover -p 'test_*.py'     # 13 test modules
 ```
 
 No API key is stored in this repo — every provider reads its key from an environment variable.
+
+## Reproduce stability (paper §3.11)
+
+A1's collision rate of 0 is a runtime property of the monitor. `stability_sim.py`
+replays a prefix of the frozen episodes under a new random controller for each
+seed (ungated and A1) and records whether A1 collides on any of them. No model
+call, and the frozen baselines are not written.
+
+```bash
+python stability_sim.py --seeds 3 --episodes 50
+```
+
+That writes:
+
+- `results/embodied_stability.json` — per-seed success, SPL, and collision for ungated and A1, plus `a1_collision_always_zero`
+- `figures/fig_stability.png` — collision rate against seed (A1 on the zero line)
+
+The §3.11 sweep is the script default, 20 seeds × 1200 episodes (`python stability_sim.py`). Matplotlib is required for the figure. `results/*.json` is gitignored, so the JSON stays a local artifact.
 
 ## 5. Figures
 
@@ -100,12 +118,13 @@ agents.py           provider clients (DeepSeek / GLM / Kimi), prompt constructio
 run.py              grid world + BFS ground truth, dataset generation
 sim_world.py        kinematic simulator, safety adjudication, AirSim backend (lazy import)
 embodied_sim.py     closed-loop episode runner, authority arms
+stability_sim.py    multi-seed A1 runtime-stability sweep (paper §3.11)
 scoring.py          response parsing, confidence extraction
 evaluate.py         benchmark driver  -> results/<model>.json
 analysis.py         accuracy / ECE / confidently-wrong categorisation
 u1_selfconsistency.py  self-consistency probe
 u2_probe.py         local small-model probes (phi-3.5-mini, qwen2.5-3b)
-test_*.py           12 unit-test modules
+test_*.py           13 unit-test modules
 .github/workflows/  17 CI workflows — per-model benchmarks, smoke tests, figure rendering
 results/            committed raw results — every number in this README comes from here
 figures/            rendered figures
