@@ -78,10 +78,19 @@ export DEEPSEEK_API_KEY=...        # or GLM_API_KEY / KIMI_API_KEY
 python evaluate.py --provider deepseek         # benchmark one model -> results/<model>.json
 python run_embodied_llm.py --provider deepseek # closed-loop, ungated vs A1 -> results/embodied_llm_*.json
 python make_fig10.py                           # render the cross-fidelity figure
-python -m unittest discover -p 'test_*.py'     # 12 test modules
+python -m unittest discover -p 'test_*.py'     # 13 test modules
 ```
 
 No API key is stored in this repo — every provider reads its key from an environment variable.
+
+### Runtime stability
+
+`stability_sim.py` re-runs the frozen-grid closed loop under an adversarial random policy across seeds (no model calls). The full sweep writes `results/embodied_stability.json` and `figures/fig_stability.png`:
+
+```bash
+python stability_sim.py --seeds 20
+python stability_sim.py --seeds 1 --episodes 20 --no-fig   # smoke
+```
 
 ## 5. Figures
 
@@ -100,12 +109,13 @@ agents.py           provider clients (DeepSeek / GLM / Kimi), prompt constructio
 run.py              grid world + BFS ground truth, dataset generation
 sim_world.py        kinematic simulator, safety adjudication, AirSim backend (lazy import)
 embodied_sim.py     closed-loop episode runner, authority arms
+stability_sim.py    multi-seed runtime-stability sweep -> results/embodied_stability.json
 scoring.py          response parsing, confidence extraction
 evaluate.py         benchmark driver  -> results/<model>.json
 analysis.py         accuracy / ECE / confidently-wrong categorisation
 u1_selfconsistency.py  self-consistency probe
 u2_probe.py         local small-model probes (phi-3.5-mini, qwen2.5-3b)
-test_*.py           12 unit-test modules
+test_*.py           13 unit-test modules
 .github/workflows/  17 CI workflows — per-model benchmarks, smoke tests, figure rendering
 results/            committed raw results — every number in this README comes from here
 figures/            rendered figures
